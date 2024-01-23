@@ -16,4 +16,16 @@ python gen_judgment.py --model-list Qwen-1_8B-Chat
 将打分进行汇总
 python show_result.py
 
+
+遇到的一个问题
+
+需要创建两个虚拟环境
+  qwen的用pydantic 2.1.1  
+    #pip uninstall pydantic 
+    #pip install pydantic 2.1.1
+ 
+  fastchat要用pydantic<2.0.0的
+    #pip install fastapi uvicorn pydantic==2.1.1 openai sse_starlette
+
+
 '''
