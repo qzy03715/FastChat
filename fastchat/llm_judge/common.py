@@ -10,6 +10,7 @@ import os
 import re
 import time
 from typing import Optional
+import requests
 
 import openai
 import anthropic
@@ -159,7 +160,7 @@ def run_judge_single(question, answer, judge, ref_answer, multi_turn=False):
     conv.append_message(conv.roles[0], user_prompt)
     conv.append_message(conv.roles[1], None)
 
-    if model in ["gpt-3.5-turbo", "gpt-4"]:
+    if model in ["gpt-3.5-turbo", "gpt-4","Qwen-1_8B-Chat"]:
         judgment = chat_completion_openai(model, conv, temperature=0, max_tokens=2048)
     elif model in ANTHROPIC_MODEL_LIST:
         judgment = chat_completion_anthropic(
@@ -262,7 +263,7 @@ def run_judge_pair(question, answer_a, answer_b, judge, ref_answer, multi_turn=F
     conv.append_message(conv.roles[0], user_prompt)
     conv.append_message(conv.roles[1], None)
 
-    if model in ["gpt-3.5-turbo", "gpt-4"]:
+    if model in ["gpt-3.5-turbo", "gpt-4","Qwen-1_8B-Chat"]:
         conv.set_system_message(system_prompt)
         judgment = chat_completion_openai(model, conv, temperature=0, max_tokens=2048)
     elif model in ANTHROPIC_MODEL_LIST:
@@ -400,28 +401,87 @@ def play_a_match_pair(match: MatchPair, output_file: str):
     return result
 
 
+
+
+
+# import requests
+# import json
+
+# # 假设您已经定义了 url 和 headers
+# url = "https://lomgltui.cloud.sealos.io/v1/chat/completions"
+# headers = {
+#     "Content-Type": "application/json",
+#     "Authorization": "Bearer sk-LqvYqCdxvjhoQed2BfFd884cEd014cC792A9823f809a8820"
+# }
+
+# def chat_completion_openai(model, conv, temperature, max_tokens, api_dict=None):
+#     output = API_ERROR_OUTPUT
+#     for _ in range(API_MAX_RETRY):
+#         try:
+#             # 构建请求数据
+#             data = {
+#                 "model": model,
+#                 "messages": conv.to_openai_api_messages(),
+#                 "temperature": temperature,
+#                 "max_tokens": max_tokens
+#             }
+#             # 发送 POST 请求
+#             response = requests.post(url, headers=headers, data=json.dumps(data))
+#             # 检查响应状态码
+#             response.raise_for_status()
+#             # 解析响应内容
+#             response_data = response.json()
+#             # 提取第一个选择的消息内容
+#             output = response_data["choices"][0]["message"]["content"]
+#             break
+#         except requests.exceptions.RequestException as e:
+#             print(type(e), e)
+#             time.sleep(API_RETRY_SLEEP)
+
+#     return output
+
+
+
+
+
+import requests
+import json
+
+# 定义本地API的基础URL和API密钥
+openai.api_base = "http://127.0.0.1:8000/v1"
+openai.api_key = "none"  # 如果本地API不需要API密钥，可以设置为"none"
+
+# 假设您已经定义了 url 和 headers
+url = openai.api_base + "/chat/completions"  # 使用本地API的基础URL
+headers = {
+    "Content-Type": "application/json"
+}
+
 def chat_completion_openai(model, conv, temperature, max_tokens, api_dict=None):
-    if api_dict is not None:
-        openai.api_base = api_dict["api_base"]
-        openai.api_key = api_dict["api_key"]
     output = API_ERROR_OUTPUT
     for _ in range(API_MAX_RETRY):
         try:
-            messages = conv.to_openai_api_messages()
-            response = openai.ChatCompletion.create(
-                model=model,
-                messages=messages,
-                n=1,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-            output = response["choices"][0]["message"]["content"]
+            # 构建请求数据
+            data = {
+                "model": model,
+                "messages": conv.to_openai_api_messages(),
+                "temperature": temperature,
+                "max_tokens": max_tokens
+            }
+            # 发送 POST 请求
+            response = requests.post(url, headers=headers, data=json.dumps(data))
+            # 检查响应状态码
+            response.raise_for_status()
+            # 解析响应内容
+            response_data = response.json()
+            # 提取第一个选择的消息内容
+            output = response_data["choices"][0]["message"]["content"]
             break
-        except openai.error.OpenAIError as e:
+        except requests.exceptions.RequestException as e:
             print(type(e), e)
             time.sleep(API_RETRY_SLEEP)
 
-    return output
+    return output 
 
 
 def chat_completion_openai_azure(model, conv, temperature, max_tokens, api_dict=None):
