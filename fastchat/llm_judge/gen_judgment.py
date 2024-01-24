@@ -24,6 +24,7 @@ from fastchat.llm_judge.common import (
 )
 
 
+
 def make_match(
     questions,
     models,
@@ -177,11 +178,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--judge-file",
         type=str,
-        default="data/judge_prompts.jsonl",
+        default="./data/judge_prompts.jsonl",
         help="The file of judge prompts.",
     )
-    parser.add_argument("--judge-model", type=str, default="gpt-4")
-    parser.add_argument("--baseline-model", type=str, default="gpt-3.5-turbo")
+    parser.add_argument("--judge-model", type=str, default="Qwen-72B-Chat")
+    parser.add_argument("--baseline-model", type=str, default="Qwen-72B-Chat")
     parser.add_argument(
         "--mode",
         type=str,

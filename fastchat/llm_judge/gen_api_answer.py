@@ -8,7 +8,7 @@ import json
 import os
 import time
 import concurrent.futures
-
+import requests
 import openai
 import shortuuid
 import tqdm
@@ -23,6 +23,21 @@ from fastchat.llm_judge.common import (
 from fastchat.llm_judge.gen_model_answer import reorg_answer_file
 from fastchat.model.model_adapter import get_conversation_template, ANTHROPIC_MODEL_LIST
 
+# url = "https://lomgltui.cloud.sealos.io/v1/chat/completions"
+# headers = {
+#     "Content-Type": "application/json",
+#     "Authorization": "Bearer sk-LqvYqCdxvjhoQed2BfFd884cEd014cC792A9823f809a8820"
+# }
+# history = []
+# def chat(msg: str):
+#     history.append({ "role": "user", "content": msg})
+#     data = {
+#         "model": "gpt-3.5-turbo",
+#         "messages": history
+#     }
+#     content = requests.post(url, headers=headers, data=json.dumps(data)).json()["choices"][0]["message"]["content"]
+#     history.append({ "role": "assistant", "content": content})
+#     return content
 
 def get_answer(
     question: dict, model: str, num_choices: int, max_tokens: int, answer_file: str
@@ -38,6 +53,9 @@ def get_answer(
         temperature = temperature_config[question["category"]]
     else:
         temperature = 0.7
+
+    msg = f"{question['turns'][0]}"
+    response_content = chat(msg)
 
     choices = []
     chat_state = None  # for palm-2 model
@@ -68,13 +86,14 @@ def get_answer(
         "question_id": question["question_id"],
         "answer_id": shortuuid.uuid(),
         "model_id": model,
-        "choices": choices,
+        "choices": [{"index": 0, "turns": [{"role": "assistant", "content": response_content}]}],  # 假设只有一个答案
         "tstamp": time.time(),
     }
 
     os.makedirs(os.path.dirname(answer_file), exist_ok=True)
     with open(answer_file, "a") as fout:
         fout.write(json.dumps(ans) + "\n")
+
 
 
 if __name__ == "__main__":
@@ -128,22 +147,21 @@ if __name__ == "__main__":
         answer_file = f"data/{args.bench_name}/model_answer/{args.model}.jsonl"
     print(f"Output to {answer_file}")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.parallel) as executor:
-        futures = []
-        for question in questions:
-            future = executor.submit(
-                get_answer,
-                question,
-                args.model,
-                args.num_choices,
-                args.max_tokens,
-                answer_file,
-            )
-            futures.append(future)
+    answers = []
+    for question in tqdm.tqdm(questions):
+        answer = get_answer(
+            question,
+            args.model,
+            args.num_choices,
+            args.max_tokens,
+            answer_file
+        )
+        answers.append(answer)
 
-        for future in tqdm.tqdm(
-            concurrent.futures.as_completed(futures), total=len(futures)
-        ):
-            future.result()
+    # Save answers to the file
+    os.makedirs(os.path.dirname(answer_file), exist_ok=True)
+    with open(answer_file, "w") as fout:
+        for ans in answers:
+            fout.write(json.dumps(ans) + "\n")
 
     reorg_answer_file(answer_file)
