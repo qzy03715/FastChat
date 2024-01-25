@@ -181,8 +181,8 @@ if __name__ == "__main__":
         default="./data/judge_prompts.jsonl",
         help="The file of judge prompts.",
     )
-    parser.add_argument("--judge-model", type=str, default="Qwen-72B-Chat")
-    parser.add_argument("--baseline-model", type=str, default="Qwen-72B-Chat")
+    parser.add_argument("--judge-model", type=str, default="gpt-4")
+    parser.add_argument("--baseline-model", type=str, default="gpt-4")
     parser.add_argument(
         "--mode",
         type=str,
