@@ -25,7 +25,7 @@ API_ERROR_OUTPUT = "$ERROR$"
 TIE_DELTA = 0.1
 
 # Categories that need reference answers
-NEED_REF_CATS = ["math", "reasoning", "coding", "arena-hard-200"]
+NEED_REF_CATS = ["math", "reasoning", "coding", "arena-hard-200", "test"]
 
 # Extract scores from judgments
 two_score_pattern = re.compile("\[\[(\d+\.?\d*),\s?(\d+\.?\d*)\]\]")
@@ -85,7 +85,7 @@ class MatchPair:
 def load_questions(question_file: str, begin: Optional[int], end: Optional[int]):
     """Load questions from a file."""
     questions = []
-    with open(question_file, "r") as ques_file:
+    with open(question_file, "r", encoding='utf-8', errors='ignore') as ques_file:
         for line in ques_file:
             if line:
                 questions.append(json.loads(line))
@@ -106,7 +106,7 @@ def load_model_answers(answer_dir: str):
     for filename in filenames:
         model_name = os.path.basename(filename)[:-6]
         answer = {}
-        with open(filename) as fin:
+        with open(filename, "r", encoding='utf-8', errors='ignore') as fin:
             for line in fin:
                 line = json.loads(line)
                 answer[line["question_id"]] = line
@@ -122,7 +122,7 @@ def load_judge_prompts(prompt_file: str):
     Dict[judge_name: str -> dict]
     """
     prompts = {}
-    with open(prompt_file) as fin:
+    with open(prompt_file, "r", encoding='utf-8', errors='ignore') as fin:
         for line in fin:
             line = json.loads(line)
             prompts[line["name"]] = line
@@ -160,7 +160,7 @@ def run_judge_single(question, answer, judge, ref_answer, multi_turn=False):
     conv.append_message(conv.roles[0], user_prompt)
     conv.append_message(conv.roles[1], None)
 
-    if model in ["gpt-3.5-turbo", "gpt-4","Qwen-1_8B-Chat","Qwen-72B-Chat"]:
+    if model in ["gpt-3.5-turbo", "gpt-4","Qwen-1_8B-Chat","Qwen-72B-Chat", "Ruijie Navigator"]:
         judgment = chat_completion_openai(model, conv, temperature=0, max_tokens=2048)
     elif model in ANTHROPIC_MODEL_LIST:
         judgment = chat_completion_anthropic(
@@ -263,7 +263,7 @@ def run_judge_pair(question, answer_a, answer_b, judge, ref_answer, multi_turn=F
     conv.append_message(conv.roles[0], user_prompt)
     conv.append_message(conv.roles[1], None)
 
-    if model in ["gpt-3.5-turbo", "gpt-4","Qwen-1_8B-Chat","Qwen-72B-Chat"]:
+    if model in ["gpt-3.5-turbo", "gpt-4","Qwen-1_8B-Chat","Qwen-72B-Chat", "Ruijie Navigator"]:
         conv.set_system_message(system_prompt)
         judgment = chat_completion_openai(model, conv, temperature=0, max_tokens=2048)
     elif model in ANTHROPIC_MODEL_LIST:
