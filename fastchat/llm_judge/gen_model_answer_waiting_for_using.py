@@ -3,7 +3,7 @@ import json
 import os
 
 # Excel文件路径
-excel_path = 'E:\\RjDir\\admin_d95c8884-f44c-4529-8f3b-48d5788371c1\\Desktop\\领航员全面测评数据集_参数自动化评测测试表_参数自动化评测.xlsx'
+excel_path = r"E:\RjDir\admin_d95c8884-f44c-4529-8f3b-48d5788371c1\Desktop\1_领航员全面测评数据集_功能配置(VPN与隧道技术)_问题汇总.xlsx"
 # JSON文件路径
 json_path = 'D:\\Git\\FastChat\\fastchat\\llm_judge\\data\\mt_bench\\model_answer\\Ruijie_Navigator_waiting_for_using.jsonl'
 
@@ -21,7 +21,7 @@ json_strings = []
 for row in sheet.iter_rows(min_row=2, values_only=True):  # 跳过标题行
     # 获取问题和答案
     question = row[0]
-    response = row[3]
+    response = row[4]
 
     # 创建JSON对象
     json_object = {
